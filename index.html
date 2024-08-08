@@ -3,108 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annotation Tool</title>
+    <title>CS RAG LLaVA LLAMA Evaluation</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+        .question-container {
+            margin-bottom: 20px;
         }
-        img {
-            width: 200px;
-            height: auto;
-            margin: 10px;
-        }
-        .statement {
-            margin: 20px 0;
-        }
-        .statement label {
-            margin-right: 10px;
-        }
-        .buttons {
-            margin-top: 20px;
+        .statement-container {
+            margin-bottom: 10px;
         }
     </style>
+</head>
+<body>
+
+    <div id="questionnaire"></div>
+
+    <button id="nextButton" onclick="nextQuestion()">Next</button>
+    <button id="saveButton" onclick="saveResponses()">Save</button>
+
     <script>
+        let data = [];
         let currentQuestionIndex = 0;
-        let responses = [];
+        const responses = [];
 
-        const data = CS_RAG_LLaVALLAMA.json;
+        async function fetchData() {
+            const response = await fetch('CS_RAG_LLaVALLAMA.json');
+            data = await response.json();
+            loadQuestion();
+        }
 
-        function loadQuestion(index) {
-            const questionData = data[index];
-            document.getElementById('question').innerText = questionData['Question'];
+        function loadQuestion() {
+            const questionnaireDiv = document.getElementById('questionnaire');
+            questionnaireDiv.innerHTML = '';
+            if (currentQuestionIndex >= data.length) {
+                saveResponses();
+                return;
+            }
 
-            const imagesContainer = document.getElementById('images');
-            imagesContainer.innerHTML = '';
-            questionData['img_dir'].forEach(image => {
-                const imgElement = document.createElement('img');
-                imgElement.src = image;
-                imagesContainer.appendChild(imgElement);
+            const questionData = data[currentQuestionIndex];
+            const questionContainer = document.createElement('div');
+            questionContainer.className = 'question-container';
+
+            const question = document.createElement('h2');
+            question.textContent = questionData.Question;
+            questionContainer.appendChild(question);
+
+            questionData.img_dir.forEach(imageSrc => {
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = "Question Image";
+                img.style.maxWidth = "200px";
+                img.style.margin = "10px";
+                questionContainer.appendChild(img);
             });
 
-            const statementsContainer = document.getElementById('statements');
-            statementsContainer.innerHTML = '';
-            questionData['out'].forEach((statement, idx) => {
-                const statementDiv = document.createElement('div');
-                statementDiv.classList.add('statement');
-                statementDiv.innerHTML = `
+            questionData.out.forEach((statement, index) => {
+                const statementContainer = document.createElement('div');
+                statementContainer.className = 'statement-container';
+                statementContainer.innerHTML = `
                     <p>${statement}</p>
-                    <label>
-                        <input type="radio" name="response_${idx}" value="correct"> Correct
-                    </label>
-                    <label>
-                        <input type="radio" name="response_${idx}" value="incorrect"> Incorrect
-                    </label>
-                    <label>
-                        <input type="radio" name="response_${idx}" value="subjective"> Subjective
-                    </label>
+                    <input type="radio" name="statement${index}" value="correct"> Correct
+                    <input type="radio" name="statement${index}" value="incorrect"> Incorrect
+                    <input type="radio" name="statement${index}" value="subjective"> Subjective
                 `;
-                statementsContainer.appendChild(statementDiv);
+                questionContainer.appendChild(statementContainer);
             });
+
+            questionnaireDiv.appendChild(questionContainer);
         }
 
         function nextQuestion() {
-            const response = {};
-            const statementsContainer = document.getElementById('statements');
-            const inputs = statementsContainer.querySelectorAll('input[type="radio"]:checked');
-            inputs.forEach(input => {
-                response[input.name] = input.value;
+            const questionData = data[currentQuestionIndex];
+            const questionResponses = { Question: questionData.Question, Responses: [] };
+            
+            questionData.out.forEach((statement, index) => {
+                const radios = document.getElementsByName(`statement${index}`);
+                let selectedValue = '';
+                for (const radio of radios) {
+                    if (radio.checked) {
+                        selectedValue = radio.value;
+                        break;
+                    }
+                }
+                questionResponses.Responses.push({ statement, response: selectedValue });
             });
 
-            if (inputs.length === document.querySelectorAll('.statement').length) {
-                responses.push(response);
-                currentQuestionIndex++;
+            responses.push(questionResponses);
 
-                if (currentQuestionIndex < data.length) {
-                    loadQuestion(currentQuestionIndex);
-                } else {
-                    saveResponses();
-                }
-            } else {
-                alert('Please answer all statements before proceeding.');
-            }
+            currentQuestionIndex++;
+            loadQuestion();
         }
 
         function saveResponses() {
+            const blob = new Blob([JSON.stringify(responses)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const file = new Blob([JSON.stringify(responses, null, 2)], { type: 'application/json' });
-            a.href = URL.createObjectURL(file);
+            a.href = url;
             a.download = 'responses.json';
             a.click();
+            URL.revokeObjectURL(url);
         }
 
-        window.onload = () => {
-            loadQuestion(currentQuestionIndex);
-        };
+        // Initial load
+        fetchData();
     </script>
-</head>
-<body>
-    <h1 id="question">Question will appear here</h1>
-    <div id="images"></div>
-    <form id="statements"></form>
-    <div class="buttons">
-        <button type="button" onclick="nextQuestion()">Next</button>
-        <button type="button" onclick="saveResponses()">Save</button>
-    </div>
+
 </body>
 </html>

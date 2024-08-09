@@ -11,14 +11,26 @@
         .statement-container {
             margin-bottom: 10px;
         }
+        .help-text {
+            display: none;
+            font-style: italic;
+            color: gray;
+        }
     </style>
 </head>
 <body>
 
-    <div id="questionnaire"></div>
+    <div id="instructions">
+        <h1>Welcome</h1>
+        <p>Please check that each statement about the question is True, False, or Subjective based on the given images. Thanks!</p>
+        <button id="startButton" onclick="startQuestionnaire()">Start</button>
+    </div>
 
-    <button id="nextButton" onclick="nextQuestion()">Next</button>
-    <button id="saveButton" onclick="saveResponses()">Save</button>
+    <div id="questionnaire" style="display:none;"></div>
+
+    <button id="nextButton" onclick="nextQuestion()" style="display:none;">Next</button>
+    <button id="saveButton" onclick="saveResponses()" style="display:none;">Save</button>
+    <button id="helpButton" onclick="toggleHelpText()" style="display:none;">Help</button>
 
     <script>
         let data = [];
@@ -26,8 +38,16 @@
         const responses = [];
 
         async function fetchData() {
-            const response = await fetch('CS_RAG_LLaVALLAMA2.json');
+            const response = await fetch('CS_RAG_LLaVALLAMA.json');
             data = await response.json();
+        }
+
+        function startQuestionnaire() {
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('questionnaire').style.display = 'block';
+            document.getElementById('nextButton').style.display = 'inline-block';
+            document.getElementById('saveButton').style.display = 'inline-block';
+            document.getElementById('helpButton').style.display = 'inline-block';
             loadQuestion();
         }
 
@@ -64,11 +84,20 @@
                     <input type="radio" name="statement${index}" value="correct"> Correct
                     <input type="radio" name="statement${index}" value="incorrect"> Incorrect
                     <input type="radio" name="statement${index}" value="subjective"> Subjective
+                    <p class="help-text" id="helpText${index}">${questionData.CS_val_2[index]}</p>
                 `;
                 questionContainer.appendChild(statementContainer);
             });
 
             questionnaireDiv.appendChild(questionContainer);
+        }
+
+        function toggleHelpText() {
+            const questionData = data[currentQuestionIndex];
+            questionData.out.forEach((statement, index) => {
+                const helpText = document.getElementById(`helpText${index}`);
+                helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none';
+            });
         }
 
         function nextQuestion() {

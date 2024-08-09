@@ -16,13 +16,17 @@
             font-style: italic;
             color: gray;
         }
+        img {
+            max-width: 400px; /* Doubled the original size */
+            margin: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div id="instructions">
         <h1>Welcome</h1>
-        <p>Please check that each statement about the question is True, False, or Subjective based on the given images. Thanks, Matin M!</p>
+        <p>Please check that each statement about the question is True, False, or Subjective based on the given images. Thanks!</p>
         <button id="startButton" onclick="startQuestionnaire()">Start</button>
     </div>
 
@@ -71,8 +75,6 @@
                 const img = document.createElement('img');
                 img.src = imageSrc;
                 img.alt = "Question Image";
-                img.style.maxWidth = "200px";
-                img.style.margin = "10px";
                 questionContainer.appendChild(img);
             });
 

@@ -22,7 +22,7 @@
 
     <div id="instructions">
         <h1>Welcome</h1>
-        <p>Please check that each statement about the question is True, False, or Subjective based on the given images. Thanks!</p>
+        <p>Please check that each statement about the question is True, False, or Subjective based on the given images. Thanks, Matin!</p>
         <button id="startButton" onclick="startQuestionnaire()">Start</button>
     </div>
 
@@ -102,7 +102,11 @@
 
         function nextQuestion() {
             const questionData = data[currentQuestionIndex];
-            const questionResponses = { Question: questionData.Question, Responses: [] };
+            const questionResponses = { 
+                QuestionNumber: currentQuestionIndex + 1,
+                Question: questionData.Question, 
+                Responses: [] 
+            };
             
             questionData.out.forEach((statement, index) => {
                 const radios = document.getElementsByName(`statement${index}`);
